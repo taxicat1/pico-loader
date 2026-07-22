@@ -1,6 +1,7 @@
 #include "common.h"
 #include "ModuleParamsLocator.h"
 #include "AutoloadAdjuster.h"
+#include "ArmHelper.h"
 #include "SdkVersion.h"
 #include "patches/PatchCollection.h"
 #include "patches/PatchContext.h"
@@ -82,6 +83,7 @@ Arm9Patcher::PatchResult Arm9Patcher::ApplyPatches(const LoaderPlatform* loaderP
                 miiUncompressBackward = FindMIiUncompressBackward(romHeader->arm9LoadAddress, sdkVersion);
                 if (miiUncompressBackward)
                 {
+                    FixMIiUncompressBackward((u32*)miiUncompressBackward, romHeader->arm9LoadAddress + 0x800);
                     u32 originalBottom = *(u32*)(moduleParams->compressedEnd - 4);
                     // Some rom hacks decompress the arm9, but don't set compressedEnd to 0.
                     if (originalBottom < 4 * 1024 * 1024)
@@ -527,4 +529,16 @@ u32 Arm9Patcher::GetAvailableParentSectionSpace() const
     }
 
     return availableParentSize;
+}
+
+void Arm9Patcher::FixMIiUncompressBackward(u32* miiUncompressBackward, u32 libsyscallEndAddress) const
+{
+    u32* exitBeq = (u32*)((u32)miiUncompressBackward + 0x4); // beq @exit = 0x0A0000xx
+    u32* uncompressReturn = (u32*)ArmHelper::GetArmBranchAddress(exitBeq); // @exit address
+    // *uncompressReturn should be bx lr, AP patches commonly change it
+    if (ArmHelper::IsArmUnconditionalB(*uncompressReturn) && ArmHelper::GetArmBranchAddress(uncompressReturn) < libsyscallEndAddress)
+    {
+        // Remove jump to libsyscall that would cause a crash (almost always AP patch)
+        *uncompressReturn = 0xE12FFF1E; // bx lr
+    }
 }

@@ -39,4 +39,5 @@ private:
     void AddRestoreCompressedEndPatch(PatchContext& patchContext,
         u32 arm9AutoLoadDoneHookAddress, u32* moduleParamsCompressedEnd, u32 originalCompressedEndValue) const;
     u32 GetAvailableParentSectionSpace() const;
+    void FixMIiUncompressBackward(u32* miiUncompressBackward, u32 libsyscallEndAddress) const;
 };
