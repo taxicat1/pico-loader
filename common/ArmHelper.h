@@ -32,20 +32,20 @@ public:
         return (u32)pc + GetArmCallOffset(*pc);
     }
 
-    /// @brief Check if an ARM instruction is an unconditional jump.
+    /// @brief Check if an ARM instruction is an unconditional branch.
     /// @param instruction The ARM instruction to check.
-    /// @return True if the instruction is an unconditional jump, false otherwise.
+    /// @return True if the instruction is an unconditional branch, false otherwise.
     static bool IsArmUnconditionalB(u32 instruction)
     {
         return (instruction >> 24) == 0xEA;
     }
 
     /// @brief Get the offset of an ARM branch (b).
-    /// @param callInstruction The ARM branch instruction.
+    /// @param branchInstruction The ARM branch instruction.
     /// @return The offset to the destination address.
-    static s32 GetArmBranchOffset(u32 callInstruction)
+    static s32 GetArmBranchOffset(u32 branchInstruction)
     {
-        return 8 + ((int)((callInstruction & 0xFFFFFF) << 8) >> 6);
+        return 8 + ((int)((branchInstruction & 0xFFFFFF) << 8) >> 6);
     }
 
     /// @brief Get the address of the destination in an ARM branch (b).
